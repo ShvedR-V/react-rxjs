@@ -22,7 +22,7 @@ export const Sensors = () => {
   // console.log(Date.now());
   if (sensors && sensors.A && sensors.B && sensors.C && sensors.D) {
     return (
-      <div>
+      <div style={styles.sensorsContainer}>
         {Object.entries(sensors).map((sensor, index) => {
           return (
             <Sensor key={index} name={sensor[0]} sensorValue={sensor[1]} />
@@ -32,4 +32,15 @@ export const Sensors = () => {
     );
   }
   return null;
+};
+
+const styles = {
+  sensorsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f4f4f4',
+    height: '100vh',
+  },
 };
