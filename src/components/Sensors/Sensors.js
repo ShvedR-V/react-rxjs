@@ -1,33 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { sensorValue$ } from '../../store/rx';
+import { combineLatest, throttleTime } from 'rxjs';
+import { createSensorValue$ } from '../../store/rx';
 import { Sensor } from './Sensor/Sensor';
 
+const sensorsData = {
+  A: createSensorValue$(),
+  B: createSensorValue$(),
+  C: createSensorValue$(),
+  D: createSensorValue$(),
+};
+
+const allSensors = combineLatest(sensorsData).pipe(throttleTime(200));
+
 export const Sensors = () => {
-  const [sensorA, setSensorA] = useState();
-  const [sensorB, setSensorB] = useState();
-  const [sensorC, setSensorC] = useState();
-  const [sensorD, setSensorD] = useState();
+  const [sensors, setSensors] = useState();
 
   useEffect(() => {
-    const subscriptionA = sensorValue$.subscribe(setSensorA);
-    const subscriptionB = sensorValue$.subscribe(setSensorB);
-    const subscriptionC = sensorValue$.subscribe(setSensorC);
-    const subscriptionD = sensorValue$.subscribe(setSensorD);
-    return () => {
-      subscriptionA.unsubscribe();
-      subscriptionB.unsubscribe();
-      subscriptionC.unsubscribe();
-      subscriptionD.unsubscribe();
-    };
-  }, [setSensorA, setSensorB, setSensorC, setSensorD]);
+    allSensors.subscribe(setSensors);
+  }, []);
 
-  if (sensorA && sensorB && sensorC && sensorD) {
+  // console.log(Date.now());
+  if (sensors && sensors.A && sensors.B && sensors.C && sensors.D) {
     return (
       <div>
-        <Sensor name="A" sensorValue={sensorA} />
-        <Sensor name="B" sensorValue={sensorB} />
-        <Sensor name="C" sensorValue={sensorC} />
-        <Sensor name="D" sensorValue={sensorD} />
+        {Object.entries(sensors).map((sensor, index) => {
+          return (
+            <Sensor key={index} name={sensor[0]} sensorValue={sensor[1]} />
+          );
+        })}
       </div>
     );
   }
