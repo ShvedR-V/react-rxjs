@@ -1,11 +1,11 @@
 import React from 'react';
 import './App.css';
-import { Sensors } from './Sensors/Sensors';
+import { SensorList } from './SensorList/SensorList';
 
 function App() {
   return (
     <div className="App">
-      <Sensors />
+      <SensorList />
     </div>
   );
 }
