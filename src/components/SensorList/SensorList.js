@@ -1,29 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { combineLatest, throttleTime } from 'rxjs';
-import { createSensorValue$ } from '../../rx/createSensorValue';
 import { Sensor } from './Sensor';
 
-const sensorsData = {
-  A: createSensorValue$(),
-  B: createSensorValue$(),
-  C: createSensorValue$(),
-  D: createSensorValue$(),
-};
-
-const allSensors = combineLatest(sensorsData).pipe(throttleTime(200));
-
-export const SensorList = () => {
-  const [sensors, setSensors] = useState();
+export const SensorList = ({ sensorsData }) => {
+  const [sensorValues, setSensorValues] = useState();
 
   useEffect(() => {
-    const subscription = allSensors.subscribe(setSensors);
-    return () => subscription.unsubscribe();
-  }, []);
+    const subscription = combineLatest(sensorsData)
+      .pipe(throttleTime(200))
+      .subscribe(setSensorValues);
 
-  if (sensors) {
+    return () => subscription.unsubscribe();
+  }, [sensorsData]);
+
+  if (sensorValues) {
     return (
-      <div style={styles.sensorsContainer}>
-        {Object.entries(sensors).map(([name, value]) => {
+      <div className="sensors" style={styles.sensorsContainer}>
+        {Object.entries(sensorValues).map(([name, value]) => {
           return <Sensor key={name} name={name} sensorValue={value} />;
         })}
       </div>
