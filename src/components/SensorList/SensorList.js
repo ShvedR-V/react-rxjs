@@ -5,15 +5,13 @@ import { Sensor } from './Sensor';
 export const SensorList = ({ sensorsData }) => {
   const [sensorValues, setSensorValues] = useState();
 
-  console.log('render!', sensorValues);
-
   useEffect(() => {
     const subscription = combineLatest(sensorsData)
       .pipe(throttleTime(200))
       .subscribe(setSensorValues);
 
     return () => subscription.unsubscribe();
-  }, [sensorsData]);
+  }, [sensorsData, setSensorValues]);
 
   if (sensorValues) {
     return (

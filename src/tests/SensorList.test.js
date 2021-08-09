@@ -2,11 +2,9 @@ import { act } from 'react-dom/test-utils';
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { SensorList } from '../components/SensorList/SensorList';
-import { createSensorValue$, getIntervalValue } from '../rx/createSensorValue';
-import { take } from 'rxjs';
-
-// jest.setTimeout(10000);
-// jest.useFakeTimers();
+import { createCustomSensorValue$ } from '../rx/createCustomSensorValue';
+import { Observable, take } from 'rxjs';
+import { waitFor } from '@testing-library/dom';
 
 describe('SensorList', () => {
   describe('contains latest value of each sensor A, B, C, D', () => {
@@ -19,93 +17,97 @@ describe('SensorList', () => {
     });
 
     afterEach(() => {
+      jest.runOnlyPendingTimers();
       jest.useRealTimers();
+      document.body.removeChild(container);
+      container.remove();
+      container = null;
     });
 
-    test.only('All 4 sensors must emit at least one value before the first “view object” is ever displayed on the dashboard.', async () => {
-      const sensorsData = {
-        A: createSensorValue$('A').pipe(take(1)),
-        B: createSensorValue$('B').pipe(take(1)),
-        C: createSensorValue$('C').pipe(take(1)),
-        D: createSensorValue$('D').pipe(take(1)),
+    test('view object contains latest value of each sensor A, B, C, D.', async () => {
+      const valuesToCompare = {
+        A: [],
+        B: [],
+        C: [],
+        D: [],
       };
 
-      // sensorsData.A.subscribe((x) => console.log('A >>>', x));
-      // sensorsData.B.subscribe((x) => console.log('B >>>', x));
-      // sensorsData.C.subscribe((x) => console.log('C >>>', x));
-      // sensorsData.D.subscribe((x) => console.log('D >>>', x));
-      // combineLatest(sensorsData).subscribe((x) => console.log('all >>>', x));
-
-      // console.log(sensorsData);
+      const sensorsData = {
+        A: createCustomSensorValue$('A', null, (data) =>
+          valuesToCompare.A.push(data)
+        ),
+        B: createCustomSensorValue$('B', null, (data) =>
+          valuesToCompare.B.push(data)
+        ),
+        C: createCustomSensorValue$('C', null, (data) =>
+          valuesToCompare.C.push(data)
+        ),
+        D: createCustomSensorValue$('D', null, (data) =>
+          valuesToCompare.D.push(data)
+        ),
+      };
 
       act(() => {
         ReactDOM.render(<SensorList sensorsData={sensorsData} />, container);
       });
 
       act(() => {
-        jest.advanceTimersByTime(1500);
+        jest.advanceTimersByTime(3000);
       });
 
-      expect(container.innerHTML).toContain('<div>');
+      const sensorA = document.querySelector('.A');
+      const sensorB = document.querySelector('.B');
+      const sensorC = document.querySelector('.C');
+      const sensorD = document.querySelector('.D');
 
-      // expect(container.firstChild).toMatchInlineSnapshot(
-      //   `<div className="App">
-      //       <SensorList />
-      //     </div>`
-      // );
+      expect(sensorA.innerHTML).toContain(
+        valuesToCompare.A[valuesToCompare.A.length - 1].value
+      );
+      expect(sensorB.innerHTML).toContain(
+        valuesToCompare.B[valuesToCompare.B.length - 1].value
+      );
+      expect(sensorC.innerHTML).toContain(
+        valuesToCompare.C[valuesToCompare.C.length - 1].value
+      );
+      expect(sensorD.innerHTML).toContain(
+        valuesToCompare.D[valuesToCompare.D.length - 1].value
+      );
+    });
+
+    test('If a specific sensor is not sending data for 1300ms, its value (in the view object) should be "no data"', async () => {
+      const sensor = new Observable((subscriber) => {
+        let timeout = null;
+        function push() {
+          timeout = setTimeout(() => {
+            subscriber.next({
+              value: 'A',
+              timestamp: Date.now() - 1300,
+            });
+            push();
+          }, 1300);
+        }
+        push();
+
+        return () => clearTimeout(timeout);
+      });
+
+      const sensorsData = {
+        A: sensor,
+      };
+
+      act(() => {
+        ReactDOM.render(<SensorList sensorsData={sensorsData} />, container);
+      });
+
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+
+      const sensorComponent = document.querySelector('.A');
+
+      await waitFor(() =>
+        expect(sensorComponent.innerHTML).toContain('no data')
+      );
     });
   });
 });
-
-// afterEach(() => {});
-
-describe('counter test', () => {
-  it('should pass', () => {
-    const sensorSpy = jest
-      .spyOn(createSensorValue$(), 'push')
-      .mockReturnValueOnce({
-        value: getIntervalValue(),
-        timestamp: Date.now(),
-      });
-    // const actualSensor =
-  });
-});
-
-// jest.useFakeTimers('legacy');
-// test('App component renders SensorList', () => {
-//   const { container } = render(<App />);
-//   expect(container.firstChild).toMatchSnapshot(
-//     `<div className="App">
-//       <SensorList />
-//     </div>`
-//   );
-// });
-
-// test.only('SensorList should render null on first render', () => {
-//   const sensorsData = {
-//     A: createSensorValue$().pipe(take(1)),
-//     B: createSensorValue$().pipe(take(1)),
-//     C: createSensorValue$().pipe(take(1)),
-//     D: createSensorValue$().pipe(take(1)),
-//   };
-//   const { container, rerender } = render(
-//     <SensorList sensorsData={sensorsData} />
-//   );
-//   expect(container.firstChild).toBeNull();
-//   rerender(<SensorList sensorsData={sensorsData} />);
-//   expect(container.firstChild).toBeTruthy();
-// });
-
-// describe('rxjs-marbles', () => {
-//   it('rxjs test', (done) => {
-//     const observer = createSensorValue$();
-//     console.log('observer');
-//     observer.pipe(take(1)).subscribe((sensor) => {
-//       console.log('sensor', sensor);
-//       expect(sensor.value)
-//         .toBeLessThanOrEqual(1500)
-//         .toBeGreaterThanOrEqual(200);
-//       done();
-//     });
-//   });
-// });

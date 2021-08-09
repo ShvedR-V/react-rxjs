@@ -1,29 +1,27 @@
 import { Observable } from 'rxjs';
 
-const getIntervalValue = (min, max) => {
+export const getIntervalValue = (min, max) => {
   return Math.random() * (max - min) + min;
 };
 
-const getRandomValue = () => {
+export const getRandomValue = () => {
   return Math.round(Math.random() * 100);
 };
 
-export const createSensorValue$ = (name) => {
+export const createCustomSensorValue$ = (name, interval, callback) => {
   let subscriber;
 
   let timeout = null;
+  let count = 1;
 
   function push() {
-    console.log('push!', name);
-    const intervalValue = getIntervalValue(200, 1500);
-    const randomSensorValue = getRandomValue();
-
+    const intervalValue = interval ? interval : getIntervalValue(200, 1500);
+    const value = `${name}_${count++}`;
     timeout = setTimeout(() => {
-      console.log('time!', name, !!subscriber);
       if (subscriber) {
-        subscriber.next({ value: randomSensorValue, timestamp: Date.now() });
+        subscriber.next({ value: value, timestamp: Date.now() });
       }
-
+      callback({ value: value, timestamp: Date.now() });
       push();
     }, intervalValue);
   }
