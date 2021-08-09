@@ -5,7 +5,11 @@ export const Sensor = ({ name, sensorValue }) => {
     return (
       <div style={styles.sensor}>
         <div>{name}:</div>
-        <div>{sensorValue.interval < 1300 ? sensorValue.value : 'no data'}</div>
+        <div className={`${name}`}>
+          {Date.now() - sensorValue.timestamp < 1300
+            ? sensorValue.value
+            : 'no data'}
+        </div>
       </div>
     );
   }

@@ -1,11 +1,20 @@
 import React from 'react';
 import './App.css';
-import { Sensors } from './Sensors/Sensors';
+import { SensorList } from './SensorList/SensorList';
+
+import { createSensorValue$ } from '../rx/createSensorValue';
 
 function App() {
+  const sensorsData = {
+    A: createSensorValue$('App: A'),
+    B: createSensorValue$('App: B'),
+    C: createSensorValue$('App: C'),
+    D: createSensorValue$('App: D'),
+  };
+
   return (
     <div className="App">
-      <Sensors />
+      <SensorList sensorsData={sensorsData} />
     </div>
   );
 }
