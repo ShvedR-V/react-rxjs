@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import { SensorList } from '../components/SensorList/SensorList';
 import { createCustomSensorValue$ } from '../rx/createCustomSensorValue';
-import { Observable, take } from 'rxjs';
+import { Observable } from 'rxjs';
 import { waitFor } from '@testing-library/dom';
 
 describe('SensorList', () => {
